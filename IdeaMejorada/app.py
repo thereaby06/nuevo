@@ -1,6 +1,11 @@
 import os
 import sys
 
+# Monkey patch para eventlet (DEBE ir antes de cualquier otro import)
+if os.environ.get("RENDER"):
+    import eventlet
+    eventlet.monkey_patch()
+
 # Permitir importaciones cuando se ejecuta desde el directorio raíz del repo
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -21,7 +26,7 @@ from routes.repuestos import repuestos_bp
 from routes.recepcionista import recepcionista_bp
 
 
-socketio = SocketIO(async_mode="threading")
+socketio = SocketIO(cors_allowed_origins="*", async_mode="eventlet")
 csrf = CSRFProtect()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
@@ -66,6 +71,8 @@ def create_app():
     with app.app_context():
         db.create_all()
         seed_data()
+    
+    print(">>> Aplicación iniciada con éxito (Modo Concurrente)")
     return app
 
 
