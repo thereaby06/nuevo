@@ -1,3 +1,9 @@
+import os
+import sys
+
+# Permitir importaciones cuando se ejecuta desde el directorio raíz del repo
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
 from flask import Flask, render_template
 from flask_login import LoginManager
 from flask_socketio import SocketIO
