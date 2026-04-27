@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Recepción | Taller AKT{% endblock %}
+{% block content %}
+<h2>Dashboard Recepcionista</h2>
+
+<details open>
+  <summary>Ingresar moto</summary>
+  <form method="post" action="{{ url_for('recepcionista.crear_moto') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="grid">
+      <input name="modelo" placeholder="Modelo AKT" required />
+      <input name="placa" placeholder="Placa" required />
+      <input name="cliente_nombre" placeholder="Cliente" required />
+      <input name="cliente_telefono" placeholder="Teléfono" required />
+      <select name="prioridad">
+        <option>Normal</option><option>Urgente</option><option>Crítica</option>
+      </select>
+    </div>
+    <textarea name="novedades" placeholder="Novedades" required></textarea>
+    <button type="submit">Registrar moto</button>
+  </form>
+</details>
+
+<form method="get">
+  <label>Filtrar estado
+    <select name="estado" onchange="this.form.submit()">
+      <option value="">Todos</option>
+      {% for e in estados %}
+      <option value="{{ e }}" {% if request.args.get('estado') == e %}selected{% endif %}>{{ e }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</form>
+<input
+  data-moto-search-input
+  placeholder="Busqueda rapida por placa, modelo o cliente..."
+  autocomplete="off"
+/>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Placa</th><th>Modelo</th><th>Cliente</th><th>Estado</th><th>Prioridad</th><th>Acciones</th></tr></thead>
+    <tbody>
+    {% for m in motos %}
+      <tr data-search-text="{{ m.placa }} {{ m.modelo }} {{ m.cliente_nombre }} {{ m.estado }} {{ m.prioridad }}">
+        <td>{{ m.placa }}</td>
+        <td>{{ m.modelo }}</td>
+        <td>{{ m.cliente_nombre }}</td>
+        <td>{{ m.estado }}</td>
+        <td><span class="badge prioridad-{{ m.prioridad|lower|replace('í','i') }}">{{ m.prioridad }}</span></td>
+        <td>
+          {% if m.estado == 'Terminada' %}
+          <div class="grid">
+            <form method="post" action="{{ url_for('recepcionista.entregar_moto', moto_id=m.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit">Entregar</button>
+            </form>
+            <a
+              role="button"
+              class="secondary whatsapp-btn"
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://wa.me/57{{ m.cliente_telefono|replace(' ', '') }}?text=Hola%20{{ m.cliente_nombre|replace(' ', '%20') }},%20tu%20moto%20{{ m.placa }}%20ya%20esta%20lista%20para%20entrega%20en%20Taller%20AKT."
+            >WhatsApp</a>
+          </div>
+          {% else %}
+          <a
+            role="button"
+            class="secondary whatsapp-btn"
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://wa.me/57{{ m.cliente_telefono|replace(' ', '') }}?text=Hola%20{{ m.cliente_nombre|replace(' ', '%20') }},%20te%20actualizamos%20el%20estado%20de%20tu%20moto%20{{ m.placa }}%20en%20Taller%20AKT:%20{{ m.estado|replace(' ', '%20') }}."
+          >WhatsApp</a>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<section>
+  <h3>Crear acceso de cliente al portal</h3>
+  <form method="post" id="clientePortalForm" action="#">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="grid">
+      <select id="portalMotoSelect" required>
+        <option value="">Selecciona moto</option>
+        {% for m in motos %}
+        <option value="{{ m.id }}">{{ m.placa }} - {{ m.cliente_nombre }}</option>
+        {% endfor %}
+      </select>
+      <input name="email" type="email" placeholder="correo@cliente.com" required />
+      <input name="password" type="text" placeholder="Contraseña temporal" required />
+      <button type="submit">Crear acceso</button>
+    </div>
+  </form>
+  <small>El cliente ingresará desde "Portal cliente" con correo y contraseña.</small>
+</section>
+
+<section class="chat-box">
+  <h3>Chat general</h3>
+  <div
+    id="chatMessages"
+    data-current-user-id="{{ current_user.id }}"
+    data-current-user-role="{{ current_user.role }}"
+    data-csrf-token="{{ csrf_token() }}"
+  ></div>
+  <div class="grid">
+    <input id="chatInput" placeholder="Escribe un mensaje..." />
+    <button id="sendChat">Enviar</button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script>
+  const portalForm = document.getElementById("clientePortalForm");
+  const portalMotoSelect = document.getElementById("portalMotoSelect");
+  if (portalForm && portalMotoSelect) {
+    portalForm.addEventListener("submit", function () {
+      const motoId = portalMotoSelect.value;
+      portalForm.action = "{{ url_for('recepcionista.crear_acceso_cliente', moto_id=999999) }}".replace("999999", motoId);
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Portal Cliente | Estado{% endblock %}
+{% block content %}
+<h2>Portal Cliente</h2>
+<p>Correo: <strong>{{ email }}</strong></p>
+<form method="post" action="{{ url_for('cliente.portal_logout') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <button type="submit" class="secondary">Cerrar sesión</button>
+</form>
+
+<section>
+  <h3>Estado de tus motos</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Placa</th><th>Modelo</th><th>Estado</th><th>Ingreso</th><th>Novedades</th></tr></thead>
+      <tbody>
+        {% for m in motos %}
+        <tr>
+          <td>{{ m.placa }}</td>
+          <td>{{ m.modelo }}</td>
+          <td>{{ m.estado }}</td>
+          <td>{{ m.fecha_ingreso.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td>{{ m.novedades }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">No hay motos asociadas a este correo.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

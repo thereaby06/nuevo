@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Repuestos | Taller AKT{% endblock %}
+{% block content %}
+<h2>Dashboard Repuestos</h2>
+
+{% if alertas_stock %}
+<article class="error">
+  <strong>Alertas de stock mínimo</strong>
+  <ul>
+    {% for a in alertas_stock %}
+    <li>{{ a.nombre }} (actual: {{ a.stock_actual }}, mínimo: {{ a.stock_minimo }})</li>
+    {% endfor %}
+  </ul>
+</article>
+{% endif %}
+
+<section>
+  <h3>Crear repuesto</h3>
+  <form method="post" action="{{ url_for('operaciones.crear_repuesto') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="grid">
+      <input name="nombre" placeholder="Nombre repuesto" required />
+      <input name="categoria" placeholder="Categoría" />
+      <input type="number" name="stock_actual" placeholder="Stock actual" min="0" />
+      <input type="number" name="stock_minimo" placeholder="Stock mínimo" min="0" />
+      <input type="number" step="0.01" name="costo_unitario" placeholder="Costo unitario" min="0" />
+      <button type="submit">Guardar repuesto</button>
+    </div>
+  </form>
+</section>
+
+<section>
+  <h3>Vincular repuesto a moto</h3>
+  <form method="post" action="{{ url_for('operaciones.usar_repuesto') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="grid">
+      <select name="moto_id" required>
+        <option value="">Selecciona moto</option>
+        {% for m in motos %}
+        <option value="{{ m.id }}">{{ m.placa }} - {{ m.modelo }}</option>
+        {% endfor %}
+      </select>
+      <select name="repuesto_id" required>
+        <option value="">Repuesto</option>
+        {% for r in repuestos %}
+        <option value="{{ r.id }}">{{ r.nombre }} (stock: {{ r.stock_actual }})</option>
+        {% endfor %}
+      </select>
+      <input type="number" name="cantidad" value="1" min="1" />
+      <button type="submit">Registrar consumo</button>
+    </div>
+  </form>
+</section>
+
+<section>
+  <h3>Inventario</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Repuesto</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Costo</th><th>Acción</th></tr></thead>
+      <tbody>
+        {% for r in repuestos %}
+        <tr>
+          <td>{{ r.nombre }}</td>
+          <td>{{ r.categoria }}</td>
+          <td>{{ r.stock_actual }}</td>
+          <td>{{ r.stock_minimo }}</td>
+          <td>{{ "%.2f"|format(r.costo_unitario) }}</td>
+          <td>
+            <form method="post" action="{{ url_for('operaciones.ajustar_stock', repuesto_id=r.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <div class="grid">
+                <input type="number" name="ajuste" placeholder="+5 / -2" required />
+                <input name="motivo" placeholder="Motivo" />
+                <button class="secondary" type="submit">Ajustar stock</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">Sin repuestos</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h3>Historial de consumo</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Fecha</th><th>Moto</th><th>Repuesto</th><th>Cantidad</th><th>Costo Unit.</th></tr></thead>
+      <tbody>
+        {% for c in consumos %}
+        <tr>
+          <td>{{ c.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td>{{ c.moto.placa if c.moto else "-" }}</td>
+          <td>{{ c.repuesto.nombre if c.repuesto else "-" }}</td>
+          <td>{{ c.cantidad }}</td>
+          <td>{{ "%.2f"|format(c.costo_unitario) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Sin consumos registrados</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

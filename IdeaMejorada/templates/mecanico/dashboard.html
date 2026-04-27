@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Mecánico | Taller AKT{% endblock %}
+{% block content %}
+<h2>Dashboard Mecánico</h2>
+{% if mi_moto %}
+<article class="timer-panel">
+  <strong>Tiempo de trabajo actual</strong>
+  <div
+    data-work-timer
+    data-start-at="{{ mi_moto.fecha_asignacion.isoformat() if mi_moto.fecha_asignacion else '' }}"
+  >Calculando...</div>
+</article>
+{% endif %}
+
+<section>
+  <h3>Motos Disponibles</h3>
+  <div class="grid">
+    {% for m in disponibles %}
+    <article>
+      <strong>{{ m.modelo }} - {{ m.placa }}</strong>
+      <p>{{ m.novedades[:90] }}{% if m.novedades|length > 90 %}...{% endif %}</p>
+      <small>Prioridad: {{ m.prioridad }}</small>
+      <form method="post" action="{{ url_for('mecanico.elegir_moto', moto_id=m.id) }}" onsubmit="return confirm('¿Deseas elegir esta moto para trabajar?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit">Elegir esta moto</button>
+      </form>
+    </article>
+    {% else %}
+      <p>No hay motos disponibles.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <h3>Mi Moto Actual</h3>
+  {% if mi_moto %}
+  <article>
+    <p><strong>{{ mi_moto.modelo }} - {{ mi_moto.placa }}</strong></p>
+    <p>{{ mi_moto.novedades }}</p>
+    <form method="post" action="{{ url_for('mecanico.actualizar_estado', moto_id=mi_moto.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="grid">
+        <select name="estado">
+          <option>En Proceso</option>
+          <option>Pendiente de Repuestos</option>
+          <option>Terminada</option>
+        </select>
+        <input name="notas_trabajo" placeholder="Notas de trabajo" />
+        <button type="submit">Actualizar estado</button>
+      </div>
+    </form>
+    <form method="post" action="{{ url_for('mecanico.liberar_moto', moto_id=mi_moto.id) }}" onsubmit="return confirm('¿Seguro que deseas liberar la moto?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button class="secondary" type="submit">Liberar moto</button>
+    </form>
+  </article>
+  {% else %}
+  <p>No tienes moto asignada.</p>
+  {% endif %}
+</section>
+
+<section>
+  <h3>Historial</h3>
+  <ul>
+  {% for h in historial %}
+    <li>{{ h.placa }} - {{ h.modelo }} - {{ h.fecha_terminacion.strftime('%Y-%m-%d %H:%M') if h.fecha_terminacion else '-' }}</li>
+  {% else %}
+    <li>Sin registros.</li>
+  {% endfor %}
+  </ul>
+</section>
+
+<section class="chat-box">
+  <h3>Chat general</h3>
+  <div
+    id="chatMessages"
+    data-current-user-id="{{ current_user.id }}"
+    data-current-user-role="{{ current_user.role }}"
+    data-csrf-token="{{ csrf_token() }}"
+  ></div>
+  <div class="grid">
+    <input id="chatInput" placeholder="Escribe un mensaje..." />
+    <button id="sendChat">Enviar</button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

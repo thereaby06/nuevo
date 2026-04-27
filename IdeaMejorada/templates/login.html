@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Login | Taller AKT{% endblock %}
+{% block content %}
+<h2>Iniciar sesión</h2>
+<form method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  <label>Usuario
+    <input name="username" required />
+  </label>
+  <label>Contraseña
+    <input type="password" name="password" required />
+  </label>
+  <label>
+    <input type="checkbox" name="remember" />
+    Recordarme y guardar sesión
+  </label>
+  <button type="submit">Entrar</button>
+</form>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Consulta Cliente | Taller AKT{% endblock %}
+{% block content %}
+<h2>Consulta de estado por placa</h2>
+<form method="get">
+  <div class="grid">
+    <input name="placa" placeholder="Ej: AB123C" value="{{ placa }}" required />
+    <button type="submit">Consultar</button>
+  </div>
+</form>
+
+{% if placa and not moto %}
+<article class="error">No encontramos una moto con esa placa.</article>
+{% endif %}
+
+{% if moto %}
+<section>
+  <h3>Resultado</h3>
+  <p><strong>Placa:</strong> {{ moto.placa }}</p>
+  <p><strong>Modelo:</strong> {{ moto.modelo }}</p>
+  <p><strong>Estado actual:</strong> {{ moto.estado }}</p>
+  <p><strong>Prioridad:</strong> {{ moto.prioridad }}</p>
+  <p><strong>Fecha ingreso:</strong> {{ moto.fecha_ingreso.strftime("%Y-%m-%d %H:%M") }}</p>
+  <p><strong>Novedades:</strong> {{ moto.novedades }}</p>
+  {% if moto.notas_trabajo %}
+  <p><strong>Notas de trabajo:</strong> {{ moto.notas_trabajo }}</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}
